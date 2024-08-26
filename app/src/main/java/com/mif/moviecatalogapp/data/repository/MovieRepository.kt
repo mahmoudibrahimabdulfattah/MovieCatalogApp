@@ -14,17 +14,16 @@ class MovieRepository @Inject constructor(
     private val movieDao: MovieDao
 ) {
     fun getPopularMovies(): Flow<List<Movie>> = flow {
+        // Local Data First
+        if(movieDao.getAllMovies().first().isNotEmpty()){
+            emit(movieDao.getAllMovies().first())
+        }
         try {
             println("Fetching popular movies...")
             val response = api.getPopularMovies(Constant.API_KEY)
             println("Fetched ${response.results.size} movies")
-            val moviesData = response.results
-            println("Filtered movies: ${moviesData.size}")
-            moviesData.forEach { movie ->
-                println("Inserting movie: $movie")
-            }
-            movieDao.insertMovies(moviesData)
-            emit(moviesData)
+            movieDao.insertMovies(response.results)
+            emit(response.results)
         } catch (e: Exception) {
             println("Error fetching popular movies: ${e.message}")
             e.printStackTrace()
