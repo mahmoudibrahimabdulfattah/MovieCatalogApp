@@ -13,7 +13,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -22,7 +21,6 @@ import com.mif.moviecatalogapp.data.model.Movie
 import com.mif.moviecatalogapp.presentation.viewmodel.MovieListState
 import com.mif.moviecatalogapp.presentation.viewmodel.MovieListViewModel
 import com.mif.moviecatalogapp.utils.Constant
-import com.mif.moviecatalogapp.utils.isOnline
 
 @Composable
 fun MovieListScreen(
@@ -61,7 +59,7 @@ fun MovieList(movies: List<Movie>, onMovieClick: (Int) -> Unit) {
 @Composable
 fun MovieItem(movie: Movie, onClick: () -> Unit) {
 
-    val imageUrl = Constant.baseImageUrl+movie.posterPath
+    val imageUrl = Constant.BASE_IMAGE_URL+movie.posterPath
 
     Card(
         modifier = Modifier
