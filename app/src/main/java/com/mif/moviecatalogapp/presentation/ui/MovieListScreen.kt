@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -21,6 +22,7 @@ import com.mif.moviecatalogapp.data.model.Movie
 import com.mif.moviecatalogapp.presentation.viewmodel.MovieListState
 import com.mif.moviecatalogapp.presentation.viewmodel.MovieListViewModel
 import com.mif.moviecatalogapp.utils.Constant
+import com.mif.moviecatalogapp.utils.NetworkUtils
 
 @Composable
 fun MovieListScreen(
@@ -28,15 +30,23 @@ fun MovieListScreen(
     onMovieClick: (Int) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+    val networkUtils = NetworkUtils(LocalContext.current)
 
     when (val currentState = state) {
         is MovieListState.Loading -> LoadingScreen()
+
         is MovieListState.Success -> MovieList(
             movies = currentState.movies,
             onMovieClick = onMovieClick
         )
 
-        is MovieListState.Error -> ErrorScreen(message = currentState.message)
+        is MovieListState.Error -> {
+            if (!networkUtils.isNetworkAvailable()) {
+                ErrorScreen(message = "No Internet Connection")
+            } else {
+                ErrorScreen(message = currentState.message)
+            }
+        }
     }
 }
 
@@ -98,6 +108,6 @@ fun MovieItem(movie: Movie, onClick: () -> Unit) {
 @Composable
 fun ErrorScreen(message: String) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = "Error: $message", color = MaterialTheme.colorScheme.error)
+        Text(text = "$message", color = MaterialTheme.colorScheme.error)
     }
 }

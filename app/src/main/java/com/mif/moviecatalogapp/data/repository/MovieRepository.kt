@@ -4,6 +4,7 @@ import com.mif.moviecatalogapp.data.api.TmdbApi
 import com.mif.moviecatalogapp.data.db.MovieDao
 import com.mif.moviecatalogapp.data.model.Movie
 import com.mif.moviecatalogapp.utils.Constant
+import com.mif.moviecatalogapp.utils.NetworkUtils
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -11,13 +12,16 @@ import javax.inject.Inject
 
 class MovieRepository @Inject constructor(
     private val api: TmdbApi,
-    private val movieDao: MovieDao
+    private val movieDao: MovieDao,
 ) {
     fun getPopularMovies(): Flow<List<Movie>> = flow {
         // Local Data First
-        if(movieDao.getAllMovies().first().isNotEmpty()){
+        if (movieDao.getAllMovies().first().isNotEmpty()) {
             emit(movieDao.getAllMovies().first())
+            println("Fetched movies from local database")
         }
+
+        // Remote Data
         try {
             println("Fetching popular movies...")
             val response = api.getPopularMovies(Constant.API_KEY)
