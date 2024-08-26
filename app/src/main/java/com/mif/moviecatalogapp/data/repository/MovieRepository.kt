@@ -13,6 +13,7 @@ import javax.inject.Inject
 class MovieRepository @Inject constructor(
     private val api: TmdbApi,
     private val movieDao: MovieDao,
+    private val networkUtils: NetworkUtils
 ) {
     fun getPopularMovies(): Flow<List<Movie>> = flow {
         // Local Data First

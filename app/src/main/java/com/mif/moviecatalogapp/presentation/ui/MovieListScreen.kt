@@ -13,11 +13,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
+import com.mif.moviecatalogapp.R
 import com.mif.moviecatalogapp.data.model.Movie
 import com.mif.moviecatalogapp.presentation.viewmodel.MovieListState
 import com.mif.moviecatalogapp.presentation.viewmodel.MovieListViewModel
@@ -66,10 +70,10 @@ fun MovieList(movies: List<Movie>, onMovieClick: (Int) -> Unit) {
     }
 }
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun MovieItem(movie: Movie, onClick: () -> Unit) {
-
-    val imageUrl = Constant.BASE_IMAGE_URL+movie.posterPath
+    val imageUrl = Constant.BASE_IMAGE_URL + movie.posterPath
 
     Card(
         modifier = Modifier
@@ -79,17 +83,20 @@ fun MovieItem(movie: Movie, onClick: () -> Unit) {
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(modifier = Modifier.padding(16.dp)) {
-            AsyncImage(
+            GlideImage(
                 model = imageUrl,
                 contentDescription = "${movie.title} poster",
                 modifier = Modifier
                     .width(100.dp)
                     .height(150.dp)
                     .clip(RoundedCornerShape(8.dp)),
-                onError = { errorState ->
-                    Log.e("MovieItem", "Error loading image: ${errorState.result.throwable}")
-                }
-            )
+                contentScale = ContentScale.Crop
+            ) {
+                it
+                    .error(R.drawable.error_image)
+                    .placeholder(R.drawable.placeholder_image)
+                    .load(imageUrl)
+            }
             Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(text = movie.title!!, style = MaterialTheme.typography.headlineSmall)
