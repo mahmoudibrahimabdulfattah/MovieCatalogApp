@@ -1,11 +1,13 @@
 package com.mif.moviecatalogapp.presentation.ui
 
-import android.util.Log
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -18,7 +20,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.mif.moviecatalogapp.R
@@ -27,7 +28,10 @@ import com.mif.moviecatalogapp.presentation.viewmodel.MovieListState
 import com.mif.moviecatalogapp.presentation.viewmodel.MovieListViewModel
 import com.mif.moviecatalogapp.utils.Constant
 import com.mif.moviecatalogapp.utils.NetworkUtils
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MovieListScreen(
     viewModel: MovieListViewModel = hiltViewModel(),
@@ -36,21 +40,40 @@ fun MovieListScreen(
     val state by viewModel.state.collectAsState()
     val networkUtils = NetworkUtils(LocalContext.current)
 
-    when (val currentState = state) {
-        is MovieListState.Loading -> LoadingScreen()
+    val refreshing = state is MovieListState.Loading
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = state is MovieListState.Loading,
+        onRefresh = { viewModel.refreshMovies() }
+    )
 
-        is MovieListState.Success -> MovieList(
-            movies = currentState.movies,
-            onMovieClick = onMovieClick
-        )
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pullRefresh(pullRefreshState),
+        contentAlignment = Alignment.Center
+    ) {
+        when (val currentState = state) {
+            is MovieListState.Loading -> LoadingScreen()
 
-        is MovieListState.Error -> {
-            if (!networkUtils.isNetworkAvailable()) {
-                ErrorScreen(message = "No Internet Connection")
-            } else {
-                ErrorScreen(message = currentState.message)
+            is MovieListState.Success -> MovieList(
+                movies = currentState.movies,
+                onMovieClick = onMovieClick
+            )
+
+            is MovieListState.Error -> {
+                if (!networkUtils.isNetworkAvailable()) {
+                    ErrorScreen(message = "No Internet Connection")
+                } else {
+                    ErrorScreen(message = currentState.message)
+                }
             }
         }
+
+        PullRefreshIndicator(
+            refreshing = refreshing,
+            state = pullRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
     }
 }
 
@@ -114,7 +137,5 @@ fun MovieItem(movie: Movie, onClick: () -> Unit) {
 
 @Composable
 fun ErrorScreen(message: String) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = "$message", color = MaterialTheme.colorScheme.error)
-    }
+    Text(text = "$message", color = MaterialTheme.colorScheme.error)
 }

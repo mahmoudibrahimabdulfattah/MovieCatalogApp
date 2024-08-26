@@ -23,6 +23,10 @@ class MovieListViewModel @Inject constructor(
         loadMovies()
     }
 
+    fun refreshMovies(){
+        loadMovies()
+    }
+
     private fun loadMovies() {
         viewModelScope.launch {
             getPopularMoviesUseCase().collect { result ->
