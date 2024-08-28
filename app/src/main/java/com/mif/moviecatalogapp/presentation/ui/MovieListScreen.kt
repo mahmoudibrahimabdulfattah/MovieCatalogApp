@@ -30,6 +30,10 @@ import com.mif.moviecatalogapp.utils.Constant
 import com.mif.moviecatalogapp.utils.NetworkUtils
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -38,11 +42,17 @@ fun MovieListScreen(
     onMovieClick: (Int) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
-    val networkUtils = NetworkUtils(LocalContext.current)
+    var isInitialLoading by remember { mutableStateOf(true) }
 
-    val refreshing = state is MovieListState.Loading
+    LaunchedEffect(state) {
+        if (state !is MovieListState.Loading) {
+            isInitialLoading = false
+        }
+    }
+
+    val refreshing = state is MovieListState.Loading && !isInitialLoading
     val pullRefreshState = rememberPullRefreshState(
-        refreshing = state is MovieListState.Loading,
+        refreshing = refreshing,
         onRefresh = { viewModel.refreshMovies() }
     )
 
@@ -52,21 +62,13 @@ fun MovieListScreen(
             .pullRefresh(pullRefreshState),
         contentAlignment = Alignment.Center
     ) {
-        when (val currentState = state) {
-            is MovieListState.Loading -> LoadingScreen()
-
-            is MovieListState.Success -> MovieList(
-                movies = currentState.movies,
+        when {
+            isInitialLoading -> LoadingScreen()
+            state is MovieListState.Success -> MovieList(
+                movies = (state as MovieListState.Success).movies,
                 onMovieClick = onMovieClick
             )
-
-            is MovieListState.Error -> {
-                if (!networkUtils.isNetworkAvailable()) {
-                    ErrorScreen(message = "No Internet Connection")
-                } else {
-                    ErrorScreen(message = currentState.message)
-                }
-            }
+            state is MovieListState.Error -> ErrorScreen(message = (state as MovieListState.Error).message)
         }
 
         PullRefreshIndicator(

@@ -15,6 +15,5 @@ class GetPopularMoviesUseCase @Inject constructor(
     operator fun invoke(): Flow<Result<List<Movie>>> =
         repository.getPopularMovies()
             .map { Result.Success(it) as Result<List<Movie>> }
-            .onStart { emit(Result.Loading) }
             .catch { emit(Result.Error(it)) }
 }

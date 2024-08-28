@@ -4,34 +4,33 @@ import com.mif.moviecatalogapp.data.api.TmdbApi
 import com.mif.moviecatalogapp.data.db.MovieDao
 import com.mif.moviecatalogapp.data.model.Movie
 import com.mif.moviecatalogapp.utils.Constant
+import com.mif.moviecatalogapp.utils.NetworkUtils
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.toList
 import javax.inject.Inject
 
 class MovieRepository @Inject constructor(
     private val api: TmdbApi,
-    private val movieDao: MovieDao
+    private val movieDao: MovieDao,
+    private val networkUtils: NetworkUtils
 ) {
     fun getPopularMovies(): Flow<List<Movie>> = flow {
-        // Local Data First
-        if (movieDao.getAllMovies().first().isNotEmpty()) {
-            emit(movieDao.getAllMovies().first())
-            println("Fetched movies from local database")
-        }
+        // First, emit data from local database
+        val localMovies = movieDao.getAllMovies().first()
+        emit(localMovies)
 
-        // Remote Data
-        try {
-            println("Fetching popular movies...")
-            val response = api.getPopularMovies(Constant.API_KEY)
-            println("Fetched ${response.results.size} movies")
-            movieDao.insertMovies(response.results)
-            emit(response.results)
-        } catch (e: Exception) {
-            println("Error fetching popular movies: ${e.message}")
-            e.printStackTrace()
-            println("Falling back to local database...")
-            emit(movieDao.getAllMovies().first())
+        // Then, if there's an internet connection, fetch from API
+        if (networkUtils.isNetworkAvailable()) {
+            try {
+                val response = api.getPopularMovies(Constant.API_KEY)
+                movieDao.insertMovies(response.results)
+                emit(response.results)
+            } catch (e: Exception) {
+                // If API call fails, we've already emitted local data, so just log the error
+                e.printStackTrace()
+            }
         }
     }
 

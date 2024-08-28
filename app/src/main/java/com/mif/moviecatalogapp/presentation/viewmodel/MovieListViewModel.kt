@@ -5,15 +5,16 @@ import androidx.lifecycle.viewModelScope
 import com.mif.moviecatalogapp.data.model.Movie
 import com.mif.moviecatalogapp.domain.usecase.GetPopularMoviesUseCase
 import com.mif.moviecatalogapp.domain.util.Result
+import com.mif.moviecatalogapp.utils.NetworkUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class MovieListViewModel @Inject constructor(
-    private val getPopularMoviesUseCase: GetPopularMoviesUseCase
+    private val getPopularMoviesUseCase: GetPopularMoviesUseCase,
+    private val networkUtils: NetworkUtils
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<MovieListState>(MovieListState.Loading)
@@ -21,9 +22,22 @@ class MovieListViewModel @Inject constructor(
 
     init {
         loadMovies()
+        observeNetworkChanges()
     }
 
-    fun refreshMovies(){
+    private fun observeNetworkChanges() {
+        viewModelScope.launch {
+            networkUtils.observeNetworkStatus()
+                .distinctUntilChanged()
+                .collect { isConnected ->
+                    if (isConnected) {
+                        loadMovies()
+                    }
+                }
+        }
+    }
+
+    fun refreshMovies() {
         loadMovies()
     }
 
