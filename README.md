@@ -2,6 +2,8 @@
 
 MovieCatalogApp is an Android application that allows users to browse popular movies and view detailed information about each movie. The app is built using modern Android development practices and libraries.
 
+![MovieCatalogeApp](https://github.com/user-attachments/assets/f4f59987-d849-47e6-975d-2ca1897eadc7)
+
 ## Features
 
 - View a list of popular movies
