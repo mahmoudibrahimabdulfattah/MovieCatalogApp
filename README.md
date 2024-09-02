@@ -7,8 +7,11 @@ MovieCatalogApp is an Android application that allows users to browse popular mo
 - View a list of popular movies
 - See detailed information about each movie
 - Offline support with local caching
+- Automatically refreshes content when an internet connection becomes available
+- Constantly listens for network changes to ensure up-to-date content
 - Pull-to-refresh functionality
 - Clean and intuitive user interface
+
 
 ## Tech Stack
 
